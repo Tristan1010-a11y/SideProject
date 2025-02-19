@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>投籃遊戲</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            border: 1px solid black;
+            background-color: lightblue;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        label {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>投籃遊戲</h1>
+    <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+    <div id="controls">
+        <label for="powerRange">調整力道：</label>
+        <input type="range" id="powerRange" min="1" max="100" value="50">
+        <button onclick="shoot()">投籃</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const basketX = 500;  // 籃框的 X 座標
+        const basketY = 150;  // 籃框的 Y 座標
+        const basketRadius = 20;  // 籃框的半徑
+
+        let ballX = 100;  // 球的起始 X 座標
+        let ballY = 350;  // 球的起始 Y 座標
+        const ballRadius = 10;  // 球的半徑
+
+        let power = 50;  // 初始力道
+        let gravity = 0.3;  // 重力加速度
+
+        // 畫籃框
+        function drawBasket() {
+            ctx.beginPath();
+            ctx.arc(basketX, basketY, basketRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        // 畫籃球
+        function drawBall(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
+            ctx.fillStyle = "orange";
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        // 清除畫布
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // 投籃操作
+        function shoot() {
+            power = document.getElementById("powerRange").value;  // 根據玩家調整力道
+
+            let velocityX = power / 5;  // 根據力道設置水平速度
+            let velocityY = -(power / 5);  // 根據力道設置垂直速度 (負值向上)
+
+            let animation = setInterval(() => {
+                clearCanvas();
+                drawBasket();
+
+                // 更新球的位置
+                ballX += velocityX;
+                ballY += velocityY;
+                velocityY += gravity;  // 每次下降一點模擬重力
+
+                drawBall(ballX, ballY);
+
+                // 檢查是否進籃
+                if (Math.abs(ballX - basketX) < basketRadius && Math.abs(ballY - basketY) < basketRadius) {
+                    clearInterval(animation);
+                    alert("進球！");
+                    resetBall()
+                    init()  
+                }
+
+                // 檢查是否超出畫布範圍
+                if (ballX > canvas.width || ballY > canvas.height) {
+                    clearInterval(animation);
+                    alert("未進球，請再試一次！");
+                    resetBall()
+                    init()  
+                }
+            }, 20);
+        }
+
+        // 重置球的位置
+        function resetBall() {
+            ballX = 100;
+            ballY = 350;
+        }
+
+        // 初始化畫面
+        function init() {
+            clearCanvas()
+            drawBasket()
+            drawBall(ballX, ballY)
+        }
+
+        init();
+    </script>
+</body>
+</html>

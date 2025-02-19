@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<script>
+    const url = 'https://data.moa.gov.tw/Service/OpenData/FromM/PoultryTransBoiledChickenData.aspx?IsTransData=1&UnitId=056'
+    let chart // 將圖表存入變數，方便後續更新
+
+    window.onload = () => {
+        // 創建圖表函數
+        function createChart(data, filterType) {
+            const now = new Date()
+
+            // 篩選日期範圍
+            const filteredData = data.filter(item => {
+                const itemDate = new Date(item.日期)
+                if (filterType === '5days') {
+                    return (now - itemDate) / (1000 * 60 * 60 * 24) <= 5
+                } else if (filterType === '1month') {
+                    return (now - itemDate) / (1000 * 60 * 60 * 24) <= 30
+                } else if (filterType === '6months') {
+                    return (now - itemDate) / (1000 * 60 * 60 * 24) <= 180
+                }
+                else if (filterType === '1years') {
+                    return (now - itemDate) / (1000 * 60 * 60 * 24) <= 365
+                }
+                else if (filterType === '10years') {
+                    return (now - itemDate) / (1000 * 60 * 60 * 24) <= 3650
+                }
+            })
+
+            // 如果已有圖表，則銷毀它以便重新創建
+            if (chart) {
+                chart.destroy()
+            }
+
+            // 創建新圖表
+            chart = new Chart(document.getElementById('mycanvas'), {
+                type: 'line', // bar line
+                options: {
+                    indexAxis: 'x',
+                    scales: {
+                        x: {
+                            reverse: 0 // 確保較新的資料顯示在右邊
+                        }
+                    }
+                },
+                data: {
+                    labels: filteredData.map(item => item.日期),
+                    datasets: [
+                        {
+                            label: '雞蛋(每台斤)',
+                            data: filteredData.map(item => item["雞蛋(產地)"])
+                        },
+                        {
+                            label: '白肉雞(1.75-1.95Kg)(每台斤)',
+                            data: filteredData.map(item => item["白肉雞(1.75-1.95Kg)"])
+                        },
+                    ]
+                }
+            })
+
+        }
+
+        // Fetch 資料
+        let fetchedData = null
+        fetch(url)
+            .then((response) => response.json())  // 使用 .json() 解析回應
+            .then((data) => {
+                console.log(data)  // 檢查資料結構
+                fetchedData = data // 儲存資料供後續使用
+                createChart(fetchedData, '5days') // 預設顯示五日內資料
+            })
+            .catch((error) => {
+                console.error('資料讀取錯誤:', error)
+            })
+
+        // 監聽下拉選單變化
+        document.getElementById('dateRange').addEventListener('change', function () {
+            const selectedRange = this.value
+            if (fetchedData) {
+                createChart(fetchedData, selectedRange)
+            }
+        })
+    }
+</script>
+
+<style>
+    body {
+        background-color: antiquewhite
+    }
+</style>
+
+<body>
+    <div>
+        <label for="dateRange">選擇日期範圍：</label>
+        <select id="dateRange">
+            <option value="5days">過去 5 日</option>
+            <option value="1month">過去 1 個月</option>
+            <option value="6months">過去 6 個月</option>
+            <option value="1years">過去 12 個月</option>
+            <option value="10years">過去10年</option>
+        </select>
+    </div>
+
+    <div id="container">
+        <canvas id="mycanvas"></canvas>
+    </div>
+</body>
+
+</html>
