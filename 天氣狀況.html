@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣天氣查詢</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="script.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            margin-top: 50px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+        }
+
+        h2 {
+            color: #00796b;
+            font-size: 1.5em;
+            transition: transform 0.5s ease;
+        }
+
+        select,
+        button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border: 1px solid #00796b;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #00796b;
+            color: white;
+            cursor: pointer;
+            transition: background 0.5s;
+        }
+
+        button:hover {
+            background-color: #004d40;
+        }
+
+        #weatherResult {
+            margin-top: 20px;
+            font-size: 18px;
+            background: #b2dfdb;
+            padding: 15px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>台灣天氣查詢</h2>
+        <select id="citySelect">
+            <option value="臺北市">臺北市</option>
+            <option value="新北市">新北市</option>
+            <option value="桃園市">桃園市</option>
+            <option value="臺中市">臺中市</option>
+            <option value="臺南市">臺南市</option>
+            <option value="高雄市">高雄市</option>
+        </select>
+        <button id="searchBtn">查詢</button>
+        <div id="weatherResult"></div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // 預設選擇台北市
+            $("#citySelect").val("臺北市");
+            getWeatherData("臺北市");
+
+            $("#searchBtn").click(function () {
+                let city = $("#citySelect").val();
+                getWeatherData(city);
+            });
+
+            function getWeatherData(city) {
+                let apiKey = "CWA-38BCA7D9-D96E-4130-BC3F-2C186295725B";
+                let apiUrl = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=${apiKey}&locationName=${city}`;
+                //API測試能不能用　https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-C0032-001?Authorization=CWA-38BCA7D9-D96E-4130-BC3F-2C186295725B
+                $.ajax({
+                    url: apiUrl,
+                    type: "GET",
+                    success: function (response) {
+                        let location = response.records.location[0];
+                        let weatherDesc = location.weatherElement[0].time[0].parameter.parameterName;
+                        let minTemp = location.weatherElement[2].time[0].parameter.parameterName;
+                        let maxTemp = location.weatherElement[4].time[0].parameter.parameterName;
+                        let comfort = location.weatherElement[3].time[0].parameter.parameterName;
+
+                        let result = `
+                            <h3>${location.locationName} 天氣</h3>
+                            <p>天氣概況：${weatherDesc}</p>
+                            <p>氣溫範圍：${minTemp}°C ~ ${maxTemp}°C</p>
+                            <p>舒適度：${comfort}</p>
+                        `;
+                        $("#weatherResult").html(result);
+                    },
+                    error: function () {
+                        alert("查詢失敗，請稍後再試！");
+                    }
+                });
+            }
+
+            $("h2").hover(
+                function () {
+                    $(this).stop(true, true).animate({ fontSize: "2em" }, 400);
+                },
+                function () {
+                    $(this).stop(true, true).animate({ fontSize: "1.5em" }, 400);
+                }
+            );
+        });
+    </script>
+</body>
+
+</html>
